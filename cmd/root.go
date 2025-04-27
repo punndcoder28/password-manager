@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -10,18 +9,36 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
-
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "password-manager",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "A secure command-line password manager for storing and managing your credentials",
+	Long: `A secure command-line password manager that helps you store and manage your passwords.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Features:
+  • Secure storage of passwords using strong encryption
+  • Passkey protection for your password vault
+  • Easy access to stored credentials
+  • Command-line interface for quick operations
+
+Usage:
+  password-manager [command] [flags]
+
+Examples:
+  # Initialize a new password vault
+  password-manager init
+
+  # Add a new password
+  password-manager add github
+
+  # Retrieve a stored password
+  password-manager get github
+
+  # List all stored passwords
+  password-manager list
+
+For more information about a specific command, use:
+  password-manager [command] --help`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -47,5 +64,3 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-
