@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
+	"github.com/punndcoder28/password-manager/internal/passkey"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +20,37 @@ Example:
   password-manager init "my-secure-passkey"`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init called")
+		passkeyString := args[0]
+		if passkeyString == "" {
+			fmt.Println("passkey is required to access the password vault")
+			os.Exit(1)
+		}
+
+		configDir := filepath.Join(os.Getenv("HOME"), ".config", "password-manager")
+		pm, err := passkey.NewPasskeyManager(configDir)
+		if err != nil {
+			fmt.Printf("failed to create passkey manager: %v\n", err)
+			os.Exit(1)
+		}
+
+		if _, err := os.Stat(filepath.Join(configDir, "passkey.dat")); os.IsNotExist(err) {
+			if err := pm.InitializePasskey(passkeyString); err != nil {
+				fmt.Printf("failed to initialize passkey: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println("Password vault initialized successfully")
+		} else {
+			valid, err := pm.VerifyPasskey(passkeyString)
+			if err != nil {
+				fmt.Printf("failed to verify passkey: %v\n", err)
+				os.Exit(1)
+			}
+			if !valid {
+				fmt.Println("Invalid passkey")
+				os.Exit(1)
+			}
+			fmt.Println("Access granted to password vault")
+		}
 	},
 }
 
