@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/punndcoder28/password-manager/internal/passkey"
+	"github.com/punndcoder28/password-manager/internal/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +27,7 @@ Example:
 			os.Exit(1)
 		}
 
-		configDir := filepath.Join(os.Getenv("HOME"), ".config", "password-manager")
+		configDir := GetConfigDir()
 		pm, err := passkey.NewPasskeyManager(configDir)
 		if err != nil {
 			fmt.Printf("failed to create passkey manager: %v\n", err)
@@ -50,6 +51,13 @@ Example:
 				os.Exit(1)
 			}
 			fmt.Println("Access granted to password vault")
+		}
+
+		// Initialize the file handler
+		fileHandler = storage.NewFileHandler(filepath.Join(configDir, "vault.json"))
+		if err := fileHandler.Initialize(); err != nil {
+			fmt.Printf("failed to initialize file handler: %v\n", err)
+			os.Exit(1)
 		}
 	},
 }
