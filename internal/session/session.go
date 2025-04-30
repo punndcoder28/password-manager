@@ -51,3 +51,18 @@ func ValidateSession(configDir string) (bool, error) {
 
 	return true, nil
 }
+
+func GetSession(configDir string) (*Session, error) {
+	sessionPath := filepath.Join(configDir, "session.json")
+	data, err := os.ReadFile(sessionPath)
+	if err != nil {
+		return nil, err
+	}
+
+	var session Session
+	if err := json.Unmarshal(data, &session); err != nil {
+		return nil, err
+	}
+
+	return &session, nil
+}
