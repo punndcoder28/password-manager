@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/punndcoder28/password-manager/internal/passkey"
+	"github.com/punndcoder28/password-manager/internal/session"
 	"github.com/punndcoder28/password-manager/internal/storage"
 	"github.com/spf13/cobra"
 )
@@ -28,15 +29,23 @@ Example:
 		}
 
 		configDir := GetConfigDir()
+		err := session.CreateSession(configDir)
+		if err != nil {
+			fmt.Printf("failed to create session: %v\n", err)
+			os.Exit(1)
+		}
+
 		pm, err := passkey.NewPasskeyManager(configDir)
 		if err != nil {
 			fmt.Printf("failed to create passkey manager: %v\n", err)
+			session.ClearSession(configDir)
 			os.Exit(1)
 		}
 
 		if _, err := os.Stat(filepath.Join(configDir, "passkey.dat")); os.IsNotExist(err) {
 			if err := pm.InitializePasskey(passkeyString); err != nil {
 				fmt.Printf("failed to initialize passkey: %v\n", err)
+				session.ClearSession(configDir)
 				os.Exit(1)
 			}
 			fmt.Println("Password vault initialized successfully")
@@ -44,10 +53,12 @@ Example:
 			valid, err := pm.VerifyPasskey(passkeyString)
 			if err != nil {
 				fmt.Printf("failed to verify passkey: %v\n", err)
+				session.ClearSession(configDir)
 				os.Exit(1)
 			}
 			if !valid {
 				fmt.Println("Invalid passkey")
+				session.ClearSession(configDir)
 				os.Exit(1)
 			}
 			fmt.Println("Access granted to password vault")
