@@ -13,8 +13,12 @@ import (
 var addCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add a new password to the password vault",
-	Long:  `Add a new password to the password vault. The password is encrypted at rest using the passkey.`,
-	Args:  cobra.ExactArgs(3),
+	Long: `Add a new password to the password vault. The password is encrypted at rest using the passkey.
+	
+	Example:
+	password-manager add <website> <username> <password>
+	`,
+	Args: cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 		website := args[0]
 		if website == "" {
