@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/punndcoder28/password-manager/vault"
+	vaultPackage "github.com/punndcoder28/password-manager/vault"
 )
 
 type FileHandler struct {
@@ -24,28 +24,24 @@ func NewFileHandler(filePath string) *FileHandler {
 
 func (fh *FileHandler) Initialize() error {
 	fh.mu.Lock()
+	defer fh.mu.Unlock()
+
 	dir := filepath.Dir(fh.filePath)
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		fh.mu.Unlock()
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
 	_, err := os.Stat(fh.filePath)
-	fh.mu.Unlock()
-
 	if err != nil && os.IsNotExist(err) {
-		newVault := &vault.Vault{
-			Entries: make(map[string]vault.Entry),
+		newVault := &vaultPackage.Vault{
+			Entries: make(map[string][]vaultPackage.Entry),
 		}
-		return fh.WriteVault(newVault)
+		return fh.writeVault(newVault)
 	}
 	return nil
 }
 
-func (fh *FileHandler) WriteVault(vault *vault.Vault) error {
-	fh.mu.Lock()
-	defer fh.mu.Unlock()
-
+func (fh *FileHandler) writeVault(vault *vaultPackage.Vault) error {
 	data, err := json.MarshalIndent(vault, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal vault: %w", err)
@@ -64,16 +60,14 @@ func (fh *FileHandler) WriteVault(vault *vault.Vault) error {
 	return nil
 }
 
-func (fh *FileHandler) ReadVault() (*vault.Vault, error) {
-	fh.mu.Lock()
-	defer fh.mu.Unlock()
-
+func (fh *FileHandler) readVault() (*vaultPackage.Vault, error) {
 	data, err := os.ReadFile(fh.filePath)
+	fmt.Println(fh.filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	var vault *vault.Vault
+	var vault *vaultPackage.Vault
 	if err := json.Unmarshal(data, &vault); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal vault: %w", err)
 	}
@@ -94,89 +88,126 @@ func (fh *FileHandler) DeleteVault() error {
 	return nil
 }
 
-func (fh *FileHandler) AddEntry(domain string, entry *vault.Entry) error {
+func (fh *FileHandler) AddEntry(domain string, entry *vaultPackage.Entry) error {
 	fh.mu.Lock()
 	defer fh.mu.Unlock()
 
-	vault, err := fh.ReadVault()
+	vault, err := fh.readVault()
 	if err != nil {
 		return fmt.Errorf("failed to read vault: %w", err)
 	}
 
-	if _, exists := vault.Entries[domain]; exists {
-		return fmt.Errorf("entry for domain %s already exists. Try updating instead", domain)
+	if vault.Entries == nil {
+		vault.Entries = make(map[string][]vaultPackage.Entry)
+	}
+	if vault.Entries[domain] == nil {
+		vault.Entries[domain] = make([]vaultPackage.Entry, 0)
+	}
+
+	for _, e := range vault.Entries[domain] {
+		if e.Username == entry.Username {
+			return fmt.Errorf("entry for username %s in domain %s already exists. Try updating instead", entry.Username, domain)
+		}
 	}
 
 	now := time.Now()
 	entry.CreatedAt = now
 	entry.UpdatedAt = now
 
-	vault.Entries[domain] = *entry
+	vault.Entries[domain] = append(vault.Entries[domain], *entry)
 
-	return fh.WriteVault(vault)
+	return fh.writeVault(vault)
 }
 
-func (fh *FileHandler) GetEntry(domain string) (*vault.Entry, error) {
+func (fh *FileHandler) GetEntry(domain string, username string) (*vaultPackage.Entry, error) {
 	fh.mu.Lock()
 	defer fh.mu.Unlock()
 
-	vault, err := fh.ReadVault()
+	vault, err := fh.readVault()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read vault: %w", err)
 	}
 
-	entry, exists := vault.Entries[domain]
+	entries, exists := vault.Entries[domain]
 	if !exists {
-		return nil, fmt.Errorf("entry for domain %s not found", domain)
+		return nil, fmt.Errorf("no entries found for domain %s", domain)
 	}
 
-	return &entry, nil
+	for _, entry := range entries {
+		if entry.Username == username {
+			return &entry, nil
+		}
+	}
+
+	return nil, fmt.Errorf("entry for username %s in domain %s not found", username, domain)
 }
 
-func (fh *FileHandler) UpdateEntry(domain string, entry *vault.Entry) error {
+func (fh *FileHandler) UpdateEntry(domain string, username string, entry *vaultPackage.Entry) error {
 	fh.mu.Lock()
 	defer fh.mu.Unlock()
 
-	vault, err := fh.ReadVault()
+	vault, err := fh.readVault()
 	if err != nil {
 		return fmt.Errorf("failed to read vault: %w", err)
 	}
 
-	if _, exists := vault.Entries[domain]; !exists {
-		return fmt.Errorf("entry for domain %s not found. Try adding instead", domain)
+	entries, exists := vault.Entries[domain]
+	if !exists {
+		return fmt.Errorf("no entries found for domain %s", domain)
 	}
 
-	now := time.Now()
-	entry.UpdatedAt = now
+	found := false
+	for i, e := range entries {
+		if e.Username == username {
+			now := time.Now()
+			entry.UpdatedAt = now
+			entries[i] = *entry
+			found = true
+			break
+		}
+	}
 
-	vault.Entries[domain] = *entry
+	if !found {
+		return fmt.Errorf("entry for username %s in domain %s not found. Try adding instead", username, domain)
+	}
 
-	return fh.WriteVault(vault)
+	vault.Entries[domain] = entries
+	return fh.writeVault(vault)
 }
 
-func (fh *FileHandler) DeactivateEntry(domain string) error {
+func (fh *FileHandler) DeactivateEntry(domain string, username string) error {
 	fh.mu.Lock()
 	defer fh.mu.Unlock()
 
-	vault, err := fh.ReadVault()
+	vault, err := fh.readVault()
 	if err != nil {
 		return fmt.Errorf("failed to read vault: %w", err)
 	}
 
-	entry, exists := vault.Entries[domain]
+	entries, exists := vault.Entries[domain]
 	if !exists {
-		return fmt.Errorf("entry for domain %s not found. Try adding instead", domain)
+		return fmt.Errorf("no entries found for domain %s", domain)
 	}
 
-	if !entry.IsActive {
-		return fmt.Errorf("entry for domain %s is already deactivated", domain)
+	found := false
+	for i, entry := range entries {
+		if entry.Username == username {
+			if !entry.IsActive {
+				return fmt.Errorf("entry for username %s in domain %s is already deactivated", username, domain)
+			}
+			now := time.Now()
+			entry.DeactivatedAt = now
+			entry.IsActive = false
+			entries[i] = entry
+			found = true
+			break
+		}
 	}
 
-	now := time.Now()
-	entry.DeactivatedAt = now
-	entry.IsActive = false
+	if !found {
+		return fmt.Errorf("entry for username %s in domain %s not found", username, domain)
+	}
 
-	vault.Entries[domain] = entry
-
-	return fh.WriteVault(vault)
+	vault.Entries[domain] = entries
+	return fh.writeVault(vault)
 }

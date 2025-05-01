@@ -12,5 +12,5 @@ type Entry struct {
 }
 
 type Vault struct {
-	Entries map[string]Entry `json:"entries"`
+	Entries map[string][]Entry `json:"entries"`
 }
