@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -40,9 +41,14 @@ For more information about a specific command, use:
 	}
 )
 
-// GetConfigDir returns the configuration directory path
-func GetConfigDir() string {
-	return filepath.Join(os.Getenv("HOME"), ".config", "password-manager")
+func GetConfigDir() (string, error) {
+	configDir := filepath.Join(os.Getenv("HOME"), ".config", "password-manager")
+
+	if err := os.MkdirAll(configDir, 0700); err != nil {
+		return "", fmt.Errorf("failed to create config directory: %w", err)
+	}
+
+	return configDir, nil
 }
 
 func Execute() {

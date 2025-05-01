@@ -49,7 +49,12 @@ var addCmd = &cobra.Command{
 }
 
 func addPassword(website string, username string, password string) error {
-	valid, err := session.ValidateSession(GetConfigDir())
+	configDir, err := GetConfigDir()
+	if err != nil {
+		return fmt.Errorf("failed to get config directory: %w", err)
+	}
+
+	valid, err := session.ValidateSession(configDir)
 	if err != nil {
 		return fmt.Errorf("failed to validate session: %w", err)
 	}
@@ -59,10 +64,10 @@ func addPassword(website string, username string, password string) error {
 	}
 
 	// Create a new file handler instance
-	fileHandler := storage.NewFileHandler(filepath.Join(GetConfigDir(), "vault.json"))
+	fileHandler := storage.NewFileHandler(filepath.Join(configDir, "vault.json"))
 
 	// Check if the vault file exists
-	if _, err := os.Stat(filepath.Join(GetConfigDir(), "vault.json")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(configDir, "vault.json")); os.IsNotExist(err) {
 		return fmt.Errorf("vault not initialized. Please run 'init' command first")
 	}
 

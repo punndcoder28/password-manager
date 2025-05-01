@@ -28,8 +28,13 @@ Example:
 			os.Exit(1)
 		}
 
-		configDir := GetConfigDir()
-		err := session.CreateSession(configDir)
+		configDir, err := GetConfigDir()
+		if err != nil {
+			fmt.Printf("failed to get config directory: %v\n", err)
+			os.Exit(1)
+		}
+
+		err = session.CreateSession(configDir)
 		if err != nil {
 			fmt.Printf("failed to create session: %v\n", err)
 			os.Exit(1)
