@@ -24,20 +24,21 @@ func NewFileHandler(filePath string) *FileHandler {
 
 func (fh *FileHandler) Initialize() error {
 	fh.mu.Lock()
-	defer fh.mu.Unlock()
-
 	dir := filepath.Dir(fh.filePath)
 	if err := os.MkdirAll(dir, 0700); err != nil {
+		fh.mu.Unlock()
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
-	if _, err := os.Stat(fh.filePath); os.IsNotExist(err) {
+	_, err := os.Stat(fh.filePath)
+	fh.mu.Unlock()
+
+	if err != nil && os.IsNotExist(err) {
 		newVault := &vault.Vault{
 			Entries: make(map[string]vault.Entry),
 		}
 		return fh.WriteVault(newVault)
 	}
-
 	return nil
 }
 
