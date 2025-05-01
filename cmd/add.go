@@ -3,9 +3,11 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/punndcoder28/password-manager/internal/session"
+	"github.com/punndcoder28/password-manager/internal/storage"
 	"github.com/punndcoder28/password-manager/vault"
 	"github.com/spf13/cobra"
 )
@@ -56,17 +58,20 @@ func addPassword(website string, username string, password string) error {
 		return fmt.Errorf("session is invalid")
 	}
 
+	// Create a new file handler instance
+	fileHandler := storage.NewFileHandler(filepath.Join(GetConfigDir(), "vault.json"))
+
+	// Check if the vault file exists
+	if _, err := os.Stat(filepath.Join(GetConfigDir(), "vault.json")); os.IsNotExist(err) {
+		return fmt.Errorf("vault not initialized. Please run 'init' command first")
+	}
+
 	passwordEntry := &vault.Entry{
 		Username:  username,
 		Password:  password,
 		IsActive:  true,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-	}
-
-	fileHandler := GetFileHandler()
-	if fileHandler == nil {
-		return fmt.Errorf("file handler not initialized. Please run 'init' command first")
 	}
 
 	return fileHandler.AddEntry(website, passwordEntry)

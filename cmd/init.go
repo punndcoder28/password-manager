@@ -65,7 +65,7 @@ Example:
 		}
 
 		// Initialize the file handler
-		fileHandler = storage.NewFileHandler(filepath.Join(configDir, "vault.json"))
+		fileHandler := storage.NewFileHandler(filepath.Join(configDir, "vault.json"))
 		if err := fileHandler.Initialize(); err != nil {
 			fmt.Printf("failed to initialize file handler: %v\n", err)
 			os.Exit(1)
