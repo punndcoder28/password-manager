@@ -62,7 +62,6 @@ func (fh *FileHandler) writeVault(vault *vaultPackage.Vault) error {
 
 func (fh *FileHandler) readVault() (*vaultPackage.Vault, error) {
 	data, err := os.ReadFile(fh.filePath)
-	fmt.Println(fh.filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
