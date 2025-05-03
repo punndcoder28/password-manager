@@ -20,44 +20,50 @@ Example:
 password-manager list
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		configDir, err := GetConfigDir()
-		if err != nil {
-			fmt.Println("Error getting config directory:", err)
-		}
-
-		valid, err := session.ValidateSession(configDir)
-		if err != nil {
-			fmt.Println("Error validating session:", err)
-		}
-
-		if !valid {
-			fmt.Println("Session expired. Please login again.")
-			return
-		}
-
-		fileHandler := storage.NewFileHandler(filepath.Join(configDir, "vault.json"))
-
-		if _, err := os.Stat(filepath.Join(configDir, "vault.json")); os.IsNotExist(err) {
-			fmt.Println("Vault not initialized. Please run 'init' command first")
-			return
-		}
-
-		entries, err := fileHandler.ListEntries()
-		if err != nil {
-			fmt.Println("Error listing entries:", err)
-			return
-		}
-
-		fmt.Println("Passwords:")
-		for domain, entries := range entries {
-			fmt.Printf("Domain: %s\n", domain)
-			for _, entry := range entries {
-				fmt.Printf("Username: %s\n", entry.Username)
-				fmt.Printf("Password: %s\n", entry.Password)
-				fmt.Println("--------------------------------")
-			}
+		if err := listPasswords(); err != nil {
+			fmt.Printf("failed to list passwords: %v\n", err)
+			os.Exit(1)
 		}
 	},
+}
+
+func listPasswords() error {
+	configDir, err := GetConfigDir()
+	if err != nil {
+		return fmt.Errorf("error getting config directory: %w", err)
+	}
+
+	valid, err := session.ValidateSession(configDir)
+	if err != nil {
+		return fmt.Errorf("error validating session: %w", err)
+	}
+
+	if !valid {
+		return fmt.Errorf("session expired. Please login again.")
+	}
+
+	fileHandler := storage.NewFileHandler(filepath.Join(configDir, "vault.json"))
+
+	if _, err := os.Stat(filepath.Join(configDir, "vault.json")); os.IsNotExist(err) {
+		return fmt.Errorf("vault not initialized. Please run 'init' command first")
+	}
+
+	entries, err := fileHandler.ListEntries()
+	if err != nil {
+		return fmt.Errorf("error listing entries: %w", err)
+	}
+
+	fmt.Println("Passwords:")
+	for domain, entries := range entries {
+		fmt.Printf("Domain: %s\n", domain)
+		for _, entry := range entries {
+			fmt.Printf("Username: %s\n", entry.Username)
+			fmt.Printf("Password: %s\n", entry.Password)
+			fmt.Println("--------------------------------")
+		}
+	}
+
+	return nil
 }
 
 func init() {
