@@ -211,3 +211,25 @@ func (fh *FileHandler) DeactivateEntry(domain string, username string) error {
 	vault.Entries[domain] = entries
 	return fh.writeVault(vault)
 }
+
+func (fh *FileHandler) ListEntries() (map[string][]vaultPackage.Entry, error) {
+	fh.mu.Lock()
+	defer fh.mu.Unlock()
+
+	vault, err := fh.readVault()
+	if err != nil {
+		return nil, fmt.Errorf("error while reading vault: %w", err)
+	}
+
+	entries := make(map[string][]vaultPackage.Entry)
+	for domain, domainEntries := range vault.Entries {
+		entries[domain] = make([]vaultPackage.Entry, 0)
+		for _, entry := range domainEntries {
+			if entry.IsActive {
+				entries[domain] = append(entries[domain], entry)
+			}
+		}
+	}
+
+	return entries, nil
+}
