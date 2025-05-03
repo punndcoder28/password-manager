@@ -3,12 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
-
-	"github.com/punndcoder28/password-manager/internal/session"
-	"github.com/punndcoder28/password-manager/internal/storage"
 )
 
 var listCmd = &cobra.Command{
@@ -28,24 +24,9 @@ password-manager list
 }
 
 func listPasswords() error {
-	configDir, err := GetConfigDir()
+	fileHandler, err := ValidateAndGetFileHandler()
 	if err != nil {
-		return fmt.Errorf("error getting config directory: %w", err)
-	}
-
-	valid, err := session.ValidateSession(configDir)
-	if err != nil {
-		return fmt.Errorf("error validating session: %w", err)
-	}
-
-	if !valid {
-		return fmt.Errorf("session expired. Please login again.")
-	}
-
-	fileHandler := storage.NewFileHandler(filepath.Join(configDir, "vault.json"))
-
-	if _, err := os.Stat(filepath.Join(configDir, "vault.json")); os.IsNotExist(err) {
-		return fmt.Errorf("vault not initialized. Please run 'init' command first")
+		return err
 	}
 
 	entries, err := fileHandler.ListEntries()

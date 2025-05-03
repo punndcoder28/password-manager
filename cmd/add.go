@@ -3,11 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
-	"github.com/punndcoder28/password-manager/internal/session"
-	"github.com/punndcoder28/password-manager/internal/storage"
 	"github.com/punndcoder28/password-manager/vault"
 	"github.com/spf13/cobra"
 )
@@ -49,24 +46,9 @@ var addCmd = &cobra.Command{
 }
 
 func addPassword(website string, username string, password string) error {
-	configDir, err := GetConfigDir()
+	fileHandler, err := ValidateAndGetFileHandler()
 	if err != nil {
-		return fmt.Errorf("failed to get config directory: %w", err)
-	}
-
-	valid, err := session.ValidateSession(configDir)
-	if err != nil {
-		return fmt.Errorf("failed to validate session: %w", err)
-	}
-
-	if !valid {
-		return fmt.Errorf("session is invalid")
-	}
-
-	fileHandler := storage.NewFileHandler(filepath.Join(configDir, "vault.json"))
-
-	if _, err := os.Stat(filepath.Join(configDir, "vault.json")); os.IsNotExist(err) {
-		return fmt.Errorf("vault not initialized. Please run 'init' command first")
+		return err
 	}
 
 	passwordEntry := &vault.Entry{
