@@ -63,10 +63,8 @@ func addPassword(website string, username string, password string) error {
 		return fmt.Errorf("session is invalid")
 	}
 
-	// Create a new file handler instance
 	fileHandler := storage.NewFileHandler(filepath.Join(configDir, "vault.json"))
 
-	// Check if the vault file exists
 	if _, err := os.Stat(filepath.Join(configDir, "vault.json")); os.IsNotExist(err) {
 		return fmt.Errorf("vault not initialized. Please run 'init' command first")
 	}
