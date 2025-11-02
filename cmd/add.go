@@ -13,7 +13,7 @@ var addCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add a new password to the password vault",
 	Long: `Add a new password to the password vault. The password is encrypted at rest using the passkey.
-	
+
 	Example:
 	password-manager add <website> <username> <password>
 	`,

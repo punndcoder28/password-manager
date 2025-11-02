@@ -25,13 +25,13 @@ Usage:
 
 Examples:
   # Initialize a new password vault
-  password-manager init
+  password-manager init <pass-key>
 
   # Add a new password
-  password-manager add github
+  password-manager add <domain> <username> <password>
 
   # Retrieve a stored password
-  password-manager get github
+  password-manager get <domain>
 
   # List all stored passwords
   password-manager list
