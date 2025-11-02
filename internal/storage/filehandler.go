@@ -232,3 +232,34 @@ func (fh *FileHandler) ListEntries() (map[string][]vaultPackage.Entry, error) {
 
 	return entries, nil
 }
+
+func (fh *FileHandler) GetPassword(domain string, username string) (string, error) {
+	fh.mu.Lock()
+	defer fh.mu.Unlock()
+
+	vault, err := fh.readVault()
+	if err != nil {
+		return "", fmt.Errorf("error while reading vault: %w", err)
+	}
+
+	if _, exists := vault.Entries[domain]; !exists {
+		return "", fmt.Errorf("no entries found for domain %s", domain)
+	}
+
+	if len(vault.Entries[domain]) == 0 {
+		return "", fmt.Errorf("no active entries found for domain %s", domain)
+	}
+
+	entries := vault.Entries[domain]
+	for _, entry := range entries {
+		if entry.Username == username {
+			if !entry.IsActive {
+				return "", fmt.Errorf("entry for username %s in domain %s is already deactivated", username, domain)
+			}
+
+			return entry.Password, nil
+		}
+	}
+
+	return "", fmt.Errorf("entry for username %s in domain %s not found", username, domain)
+}
