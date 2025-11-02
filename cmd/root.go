@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"golang.design/x/clipboard"
 )
 
 var (
@@ -59,5 +60,10 @@ func Execute() {
 }
 
 func init() {
+	error := clipboard.Init()
+	if error != nil {
+		fmt.Println("Failed to initialize clipboard:", error)
+		os.Exit(1)
+	}
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
