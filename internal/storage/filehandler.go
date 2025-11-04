@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -211,7 +212,7 @@ func (fh *FileHandler) DeactivateEntry(domain string, username string) error {
 	return fh.writeVault(vault)
 }
 
-func (fh *FileHandler) ListEntries() (map[string][]vaultPackage.Entry, error) {
+func (fh *FileHandler) ListEntries() (map[string][]vaultPackage.MaskedEntry, error) {
 	fh.mu.Lock()
 	defer fh.mu.Unlock()
 
@@ -220,12 +221,16 @@ func (fh *FileHandler) ListEntries() (map[string][]vaultPackage.Entry, error) {
 		return nil, fmt.Errorf("error while reading vault: %w", err)
 	}
 
-	entries := make(map[string][]vaultPackage.Entry)
+	entries := make(map[string][]vaultPackage.MaskedEntry)
 	for domain, domainEntries := range vault.Entries {
-		entries[domain] = make([]vaultPackage.Entry, 0)
+		entries[domain] = make([]vaultPackage.MaskedEntry, 0)
 		for _, entry := range domainEntries {
 			if entry.IsActive {
-				entries[domain] = append(entries[domain], entry)
+				maskedEntry := vaultPackage.MaskedEntry{
+					Username: entry.Username,
+					Password: strings.Repeat("*", len(entry.Password)),
+				}
+				entries[domain] = append(entries[domain], maskedEntry)
 			}
 		}
 	}
