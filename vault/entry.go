@@ -9,6 +9,7 @@ type Entry struct {
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 	DeactivatedAt time.Time `json:"deactivated_at"`
+	LastReadAt    time.Time `json:"last_read_at"`
 }
 
 type Vault struct {

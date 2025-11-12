@@ -113,6 +113,7 @@ func (fh *FileHandler) AddEntry(domain string, entry *vaultPackage.Entry) error 
 	now := time.Now()
 	entry.CreatedAt = now
 	entry.UpdatedAt = now
+	entry.LastReadAt = now
 
 	vault.Entries[domain] = append(vault.Entries[domain], *entry)
 
@@ -133,9 +134,16 @@ func (fh *FileHandler) GetEntry(domain string, username string) (*vaultPackage.E
 		return nil, fmt.Errorf("no entries found for domain %s", domain)
 	}
 
-	for _, entry := range entries {
+	for i, entry := range entries {
 		if entry.Username == username {
-			return &entry, nil
+			entries[i].LastReadAt = time.Now()
+			vault.Entries[domain] = entries
+
+			if err := fh.writeVault(vault); err != nil {
+				return nil, fmt.Errorf("failed to write vault: %w", err)
+			}
+
+			return &entries[i], nil
 		}
 	}
 
@@ -161,6 +169,7 @@ func (fh *FileHandler) UpdateEntry(domain string, username string, entry *vaultP
 		if e.Username == username {
 			now := time.Now()
 			entry.UpdatedAt = now
+			entry.LastReadAt = now
 			entries[i] = *entry
 			found = true
 			break
@@ -224,8 +233,9 @@ func (fh *FileHandler) ListEntries() (map[string][]vaultPackage.MaskedEntry, err
 	entries := make(map[string][]vaultPackage.MaskedEntry)
 	for domain, domainEntries := range vault.Entries {
 		entries[domain] = make([]vaultPackage.MaskedEntry, 0)
-		for _, entry := range domainEntries {
+		for i, entry := range domainEntries {
 			if entry.IsActive {
+				domainEntries[i].LastReadAt = time.Now()
 				maskedEntry := vaultPackage.MaskedEntry{
 					Username: entry.Username,
 					Password: strings.Repeat("*", len(entry.Password)),
@@ -233,6 +243,10 @@ func (fh *FileHandler) ListEntries() (map[string][]vaultPackage.MaskedEntry, err
 				entries[domain] = append(entries[domain], maskedEntry)
 			}
 		}
+	}
+
+	if err := fh.writeVault(vault); err != nil {
+		return nil, fmt.Errorf("failed to update last read at time: %w", err)
 	}
 
 	return entries, nil
@@ -256,10 +270,16 @@ func (fh *FileHandler) GetPassword(domain string, username string) (string, erro
 	}
 
 	entries := vault.Entries[domain]
-	for _, entry := range entries {
+	for i, entry := range entries {
 		if entry.Username == username {
+			entries[i].LastReadAt = time.Now()
+			vault.Entries[domain] = entries
 			if !entry.IsActive {
 				return "", fmt.Errorf("entry for username %s in domain %s is already deactivated", username, domain)
+			}
+
+			if err := fh.writeVault(vault); err != nil {
+				return "", fmt.Errorf("failed to update last read at time: %w", err)
 			}
 
 			return entry.Password, nil
