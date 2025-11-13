@@ -252,6 +252,33 @@ func (fh *FileHandler) ListEntries() (map[string][]vaultPackage.MaskedEntry, err
 	return entries, nil
 }
 
+func (fh *FileHandler) ListEntriesWithMetadata() (map[string][]vaultPackage.Entry, error) {
+	fh.mu.Lock()
+	defer fh.mu.Unlock()
+
+	vault, err := fh.readVault()
+	if err != nil {
+		return nil, fmt.Errorf("error while reading vault: %w", err)
+	}
+
+	entries := make(map[string][]vaultPackage.Entry)
+	for domain, domainEntries := range vault.Entries {
+		entries[domain] = make([]vaultPackage.Entry, 0)
+		for i, entry := range domainEntries {
+			if entry.IsActive {
+				domainEntries[i].LastReadAt = time.Now()
+				entries[domain] = append(entries[domain], entry)
+			}
+		}
+	}
+
+	if err := fh.writeVault(vault); err != nil {
+		return nil, fmt.Errorf("failed to update last read at time: %w", err)
+	}
+
+	return entries, nil
+}
+
 func (fh *FileHandler) GetPassword(domain string, username string) (string, error) {
 	fh.mu.Lock()
 	defer fh.mu.Unlock()
