@@ -1,26 +1,28 @@
-package ui
+package list
 
 import (
 	"fmt"
 	"strings"
-	"time"
 
-	"github.com/dustin/go-humanize"
+	"github.com/punndcoder28/password-manager/internal/ui/common"
 	"github.com/punndcoder28/password-manager/vault"
 )
 
-// View renders the UI
+// View renders the list UI
 func (m Model) View() string {
 	if m.err != nil {
-		return errorStyle.Render(fmt.Sprintf("Error: %v", m.err))
+		return common.ErrorStyle.Render(fmt.Sprintf("Error: %v", m.err))
 	}
 
 	var s strings.Builder
 
 	// Title
 	totalEntries := m.getTotalEntryCount()
-	title := fmt.Sprintf("🔐 Password Vault (%d %s)", totalEntries, pluralize(totalEntries, "entry", "entries"))
-	s.WriteString(titleStyle.Render(title))
+	title := fmt.Sprintf("%s Password Vault (%d %s)",
+		common.Icons.Lock,
+		totalEntries,
+		common.Pluralize(totalEntries, "entry", "entries"))
+	s.WriteString(common.TitleStyle.Render(title))
 	s.WriteString("\n\n")
 
 	// Render tree
@@ -42,7 +44,7 @@ func (m Model) View() string {
 
 	// Help text
 	s.WriteString("\n")
-	s.WriteString(helpStyle.Render(m.getHelpText()))
+	s.WriteString(common.HelpStyle.Render(getHelpText()))
 
 	return s.String()
 }
@@ -55,14 +57,14 @@ func (m Model) renderDomain(node TreeNode, nodeIndex int, position int) string {
 	isSelected := m.cursor == position
 
 	// Expand/collapse icon
-	icon := "▶"
+	icon := common.Icons.ArrowRight
 	if node.Expanded {
-		icon = "▼"
+		icon = common.Icons.ArrowDown
 	}
 
 	// Entry count
 	entryCount := len(node.Entries)
-	countText := fmt.Sprintf("(%d %s)", entryCount, pluralize(entryCount, "account", "accounts"))
+	countText := fmt.Sprintf("(%d %s)", entryCount, common.Pluralize(entryCount, "account", "accounts"))
 
 	// Build the domain line
 	domainText := fmt.Sprintf("%s %s %s", icon, node.Domain, countText)
@@ -71,7 +73,7 @@ func (m Model) renderDomain(node TreeNode, nodeIndex int, position int) string {
 	var styledText string
 	if isSelected {
 		styledText = domainSelectedStyle.Render(domainText)
-		s.WriteString("❯ ")
+		s.WriteString(common.Icons.Cursor + " ")
 	} else {
 		s.WriteString("  ")
 		if node.Expanded {
@@ -104,7 +106,7 @@ func (m Model) renderEntry(domain string, entry vault.Entry, entryIdx int, posit
 
 	// Selection indicator
 	if isSelected {
-		s.WriteString("❯ ")
+		s.WriteString(common.Icons.Cursor + " ")
 	} else {
 		s.WriteString("  ")
 	}
@@ -112,7 +114,7 @@ func (m Model) renderEntry(domain string, entry vault.Entry, entryIdx int, posit
 	// Entry header (username)
 	s.WriteString(treeLineStyle.Render(prefix))
 	s.WriteString(" ")
-	s.WriteString(usernameStyle.Render(fmt.Sprintf("👤 %s", entry.Username)))
+	s.WriteString(usernameStyle.Render(fmt.Sprintf("%s %s", common.Icons.User, entry.Username)))
 	s.WriteString("\n")
 
 	// Determine line prefix for nested items
@@ -131,23 +133,23 @@ func (m Model) renderEntry(domain string, entry vault.Entry, entryIdx int, posit
 	s.WriteString(selectionPadding)
 	s.WriteString(treeLineStyle.Render(nestedPrefix))
 	s.WriteString(" ")
-	s.WriteString(passwordStyle.Render(fmt.Sprintf("🔑 %s", password)))
+	s.WriteString(passwordStyle.Render(fmt.Sprintf("%s %s", common.Icons.Key, password)))
 	s.WriteString("\n")
 
 	// Created date
-	createdText := fmt.Sprintf("📅 Created: %s", formatTimeAgo(entry.CreatedAt))
+	createdText := fmt.Sprintf("%s Created: %s", common.Icons.Calendar, common.FormatTimeAgo(entry.CreatedAt))
 	s.WriteString(selectionPadding)
 	s.WriteString(treeLineStyle.Render(nestedPrefix))
 	s.WriteString(" ")
-	s.WriteString(metadataStyle.Render(createdText))
+	s.WriteString(common.MetadataStyle.Render(createdText))
 	s.WriteString("\n")
 
 	// Updated date
-	updatedText := fmt.Sprintf("🕒 Updated: %s", formatTimeAgo(entry.UpdatedAt))
+	updatedText := fmt.Sprintf("%s Updated: %s", common.Icons.Clock, common.FormatTimeAgo(entry.UpdatedAt))
 	s.WriteString(selectionPadding)
 	s.WriteString(treeLineStyle.Render(nestedPrefix))
 	s.WriteString(" ")
-	s.WriteString(metadataStyle.Render(updatedText))
+	s.WriteString(common.MetadataStyle.Render(updatedText))
 	s.WriteString("\n")
 
 	return s.String()
@@ -158,27 +160,11 @@ func (m Model) formatPassword(domain string, password string, entryIdx int) stri
 	if m.isPasswordRevealed(domain, entryIdx) {
 		return password
 	}
-	return strings.Repeat("*", len(password))
-}
-
-// formatTimeAgo formats a time as a human-readable "time ago" string
-func formatTimeAgo(t time.Time) string {
-	if t.IsZero() {
-		return "Unknown"
-	}
-	return humanize.Time(t)
-}
-
-// pluralize returns singular or plural form based on count
-func pluralize(count int, singular string, plural string) string {
-	if count == 1 {
-		return singular
-	}
-	return plural
+	return common.MaskPassword(password)
 }
 
 // getHelpText returns the help text for keyboard shortcuts
-func (m Model) getHelpText() string {
+func getHelpText() string {
 	return "[↑/↓ or j/k: navigate] [Enter/Space: expand/toggle] [r: reveal password] [R: reveal all] [q: quit]"
 }
 

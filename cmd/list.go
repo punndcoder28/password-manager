@@ -5,7 +5,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/punndcoder28/password-manager/internal/ui"
+	"github.com/punndcoder28/password-manager/internal/ui/scenes"
 	"github.com/spf13/cobra"
 )
 
@@ -49,9 +49,9 @@ func listPasswords() error {
 		return nil
 	}
 
-	// Create and run the Bubble Tea program
-	model := ui.InitialModel(entries)
-	program := tea.NewProgram(model, tea.WithAltScreen())
+	// Create and run the Bubble Tea program with the new scene-based architecture
+	scene := scenes.NewPasswordListScene(entries)
+	program := tea.NewProgram(scene, tea.WithAltScreen())
 	
 	if _, err := program.Run(); err != nil {
 		return fmt.Errorf("error running UI: %w", err)

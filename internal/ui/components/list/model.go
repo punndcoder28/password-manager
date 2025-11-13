@@ -1,4 +1,4 @@
-package ui
+package list
 
 import (
 	"sort"
@@ -14,7 +14,7 @@ type TreeNode struct {
 	Expanded bool
 }
 
-// Model represents the Bubble Tea model for the password list UI
+// Model represents the Bubble Tea model for the password list component
 type Model struct {
 	entries         map[string][]vault.Entry
 	tree            []TreeNode
@@ -27,10 +27,10 @@ type Model struct {
 	height          int
 }
 
-// InitialModel creates a new model with the provided password entries
-func InitialModel(entries map[string][]vault.Entry) Model {
+// New creates a new list model with the provided password entries
+func New(entries map[string][]vault.Entry) Model {
 	tree := buildTree(entries)
-	
+
 	return Model{
 		entries:         entries,
 		tree:            tree,
@@ -46,14 +46,14 @@ func InitialModel(entries map[string][]vault.Entry) Model {
 // buildTree creates a sorted tree structure from the password entries
 func buildTree(entries map[string][]vault.Entry) []TreeNode {
 	tree := make([]TreeNode, 0, len(entries))
-	
+
 	// Get sorted domain names
 	domains := make([]string, 0, len(entries))
 	for domain := range entries {
 		domains = append(domains, domain)
 	}
 	sort.Strings(domains)
-	
+
 	// Build tree nodes
 	for _, domain := range domains {
 		tree = append(tree, TreeNode{
@@ -62,11 +62,11 @@ func buildTree(entries map[string][]vault.Entry) []TreeNode {
 			Expanded: false,
 		})
 	}
-	
+
 	return tree
 }
 
-// Init initializes the model
+// Init initializes the model (required by Bubble Tea)
 func (m Model) Init() tea.Cmd {
 	return nil
 }
