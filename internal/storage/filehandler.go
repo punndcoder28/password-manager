@@ -17,6 +17,7 @@ type FileHandler struct {
 	mu       sync.Mutex
 }
 
+// sample comment for testing ghstack
 func NewFileHandler(filePath string) *FileHandler {
 	return &FileHandler{
 		filePath: filePath,
