@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/punndcoder28/password-manager/vault"
+	vaultPackage "github.com/punndcoder28/password-manager/internal/vault"
 	"github.com/spf13/cobra"
 )
 
@@ -51,7 +51,7 @@ func addPassword(website string, username string, password string) error {
 		return err
 	}
 
-	passwordEntry := &vault.Entry{
+	passwordEntry := &vaultPackage.Entry{
 		Username:  username,
 		Password:  password,
 		IsActive:  true,

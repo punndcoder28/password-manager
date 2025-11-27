@@ -3,7 +3,7 @@ package scenes
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/punndcoder28/password-manager/internal/ui/components/list"
-	"github.com/punndcoder28/password-manager/vault"
+	vaultPackage "github.com/punndcoder28/password-manager/internal/vault"
 )
 
 // PasswordListScene represents the full-screen scene for listing passwords
@@ -14,7 +14,7 @@ type PasswordListScene struct {
 }
 
 // NewPasswordListScene creates a new password list scene
-func NewPasswordListScene(entries map[string][]vault.Entry) PasswordListScene {
+func NewPasswordListScene(entries map[string][]vaultPackage.Entry) PasswordListScene {
 	return PasswordListScene{
 		listModel: list.New(entries),
 	}
@@ -28,12 +28,12 @@ func (s PasswordListScene) Init() tea.Cmd {
 // Update handles state changes
 func (s PasswordListScene) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	updatedModel, cmd := s.listModel.Update(msg)
-	
+
 	// Type assertion to convert back to list.Model
 	if m, ok := updatedModel.(list.Model); ok {
 		s.listModel = m
 	}
-	
+
 	return s, cmd
 }
 
@@ -41,4 +41,3 @@ func (s PasswordListScene) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (s PasswordListScene) View() string {
 	return s.listModel.View()
 }
-

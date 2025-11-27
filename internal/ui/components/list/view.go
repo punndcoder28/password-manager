@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/punndcoder28/password-manager/internal/ui/common"
-	"github.com/punndcoder28/password-manager/vault"
+	vaultPackage "github.com/punndcoder28/password-manager/internal/vault"
 )
 
 // View renders the list UI
@@ -90,7 +90,7 @@ func (m Model) renderDomain(node TreeNode, nodeIndex int, position int) string {
 }
 
 // renderEntry renders a password entry in the tree
-func (m Model) renderEntry(domain string, entry vault.Entry, entryIdx int, position int, isLast bool) string {
+func (m Model) renderEntry(domain string, entry vaultPackage.Entry, entryIdx int, position int, isLast bool) string {
 	var s strings.Builder
 
 	// Determine if this entry is selected
@@ -167,4 +167,3 @@ func (m Model) formatPassword(domain string, password string, entryIdx int) stri
 func getHelpText() string {
 	return "[↑/↓ or j/k: navigate] [Enter/Space: expand/toggle] [r: reveal password] [R: reveal all] [q: quit]"
 }
-

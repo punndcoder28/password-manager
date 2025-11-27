@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	vaultPackage "github.com/punndcoder28/password-manager/vault"
+	vaultPackage "github.com/punndcoder28/password-manager/internal/vault"
 )
 
 type FileHandler struct {

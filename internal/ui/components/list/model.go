@@ -4,19 +4,19 @@ import (
 	"sort"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/punndcoder28/password-manager/vault"
+	vaultPackage "github.com/punndcoder28/password-manager/internal/vault"
 )
 
 // TreeNode represents a node in the tree structure
 type TreeNode struct {
 	Domain   string
-	Entries  []vault.Entry
+	Entries  []vaultPackage.Entry
 	Expanded bool
 }
 
 // Model represents the Bubble Tea model for the password list component
 type Model struct {
-	entries         map[string][]vault.Entry
+	entries         map[string][]vaultPackage.Entry
 	tree            []TreeNode
 	cursor          int
 	selectedDomain  string
@@ -28,7 +28,7 @@ type Model struct {
 }
 
 // New creates a new list model with the provided password entries
-func New(entries map[string][]vault.Entry) Model {
+func New(entries map[string][]vaultPackage.Entry) Model {
 	tree := buildTree(entries)
 
 	return Model{
@@ -44,7 +44,7 @@ func New(entries map[string][]vault.Entry) Model {
 }
 
 // buildTree creates a sorted tree structure from the password entries
-func buildTree(entries map[string][]vault.Entry) []TreeNode {
+func buildTree(entries map[string][]vaultPackage.Entry) []TreeNode {
 	tree := make([]TreeNode, 0, len(entries))
 
 	// Get sorted domain names
@@ -95,4 +95,3 @@ func (m *Model) togglePasswordReveal(domain string, entryIndex int) {
 	}
 	m.revealPasswords[domain][entryIndex] = !m.revealPasswords[domain][entryIndex]
 }
-
