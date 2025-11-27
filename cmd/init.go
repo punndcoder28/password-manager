@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/punndcoder28/password-manager/internal/encryption"
 	"github.com/punndcoder28/password-manager/internal/passkey"
 	"github.com/punndcoder28/password-manager/internal/session"
 	"github.com/punndcoder28/password-manager/internal/storage"
@@ -27,6 +28,9 @@ Example:
 			fmt.Println("passkey is required to access the password vault")
 			os.Exit(1)
 		}
+
+		salt := encryption.GenerateSalt()
+		fmt.Println(string(salt))
 
 		configDir, err := GetConfigDir()
 		if err != nil {

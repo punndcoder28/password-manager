@@ -1,6 +1,9 @@
 package encryption
 
-import "crypto/sha256"
+import (
+	"crypto/rand"
+	"crypto/sha256"
+)
 
 type Encryptor struct {
 	key []byte
@@ -11,4 +14,12 @@ func NewEncryptor(passkey string) *Encryptor {
 	return &Encryptor{
 		key: hash[:],
 	}
+}
+
+func GenerateSalt() []byte {
+	salt := make([]byte, 32)
+	if _, err := rand.Read(salt); err != nil {
+		panic(err)
+	}
+	return salt
 }
