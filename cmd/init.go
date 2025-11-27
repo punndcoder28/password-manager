@@ -30,7 +30,9 @@ Example:
 		}
 
 		salt := encryption.GenerateSalt()
-		fmt.Println(string(salt))
+
+		kdfKey := encryption.KDFGenerator(salt, []byte(passkeyString))
+		fmt.Println(string(kdfKey))
 
 		configDir, err := GetConfigDir()
 		if err != nil {

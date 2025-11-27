@@ -3,6 +3,8 @@ package encryption
 import (
 	"crypto/rand"
 	"crypto/sha256"
+
+	"golang.org/x/crypto/argon2"
 )
 
 type Encryptor struct {
@@ -22,4 +24,9 @@ func GenerateSalt() []byte {
 		panic(err)
 	}
 	return salt
+}
+
+func KDFGenerator(salt []byte, passKey []byte) []byte {
+	keyByte := argon2.IDKey(passKey, salt, 1, 64*1024, 4, 32)
+	return keyByte
 }
